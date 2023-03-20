@@ -18,39 +18,70 @@
 # Of course, you'll need to replace this with an actual solution...
     
 
-from .utils import render_board
+# from .utils import render_board
+# print(render_board(input, ansi=True))
 import heapq
-from search import Node
+import sys
+import copy
+sys.path.append("/search")
+from search import node
 
 BOARD_SIZE = 7
-board = [[None for _ in range(BOARD_SIZE)] for _ in range(BOARD_SIZE)]
+OFFSETS = [(0,1), (-1,1), (-1,0), (0,-1), (1,-1), (1,0)]
 
-def heuristic(i, j):
+#def search(input: dict[tuple, tuple]) -> list[tuple]:
+def search(input):
+    initial_node = node.Node(boardify(input), 0, 0, [])
+    
+    queue = [initial_node]
+    
+    while queue:
+        heapq.heapify(queue)
+        curr = heapq.heappop(queue)
+        # print(curr)
+        if get_score(curr.board, 'b', BOARD_SIZE)==0:
+            return curr.moves
+        # for every red cell
+        for r in range(BOARD_SIZE):
+            for c in range(BOARD_SIZE):
+                if curr.board[r][c]:
+                    if curr.board[r][c][0]=="r": 
+                        # for every direction 
+                        for dr, dc in OFFSETS:
+                            curr_child_board = copy.deepcopy(curr.board)
+                            power = curr.board[r][c][1]
+                            old_r = r
+                            old_c = c
+                            while power>0:
+                                new_r, new_c = (r+dr)%BOARD_SIZE, (c+dc)%BOARD_SIZE
+                                if curr_child_board[new_r][new_c]==None:
+                                    curr_child_board[new_r][new_c] = ("r", 1)
+                                else:
+                                    curr_child_board[new_r][new_c] = ("r", curr_child_board[new_r][new_c][1]+1)
+                                r, c = new_r, new_c
+                                power-=1
+                            curr_child_board[old_r][old_c] = None
+                            r, c = old_r, old_c
+                            curr_move_copy = copy.deepcopy(curr.moves)
+                            curr_move_copy.append([r, c, dr, dc])
+                            child_node = node.Node(curr_child_board, curr.path_cost+1, 0, curr_move_copy)
+                            queue.append(child_node)
+                        print(curr.path_cost)
+
+def heuristic(r, cs):
     pass
 
-def search(input: dict[tuple, tuple]) -> list[tuple]:
-    print(input)
-    print(render_board(input, ansi=True))
-    for ((r, q), (player, power)) in input.items():
-        board[r][q] = (player, power)
-
-    for i in range(BOARD_SIZE):
-        for j in range(BOARD_SIZE):
-            print(f"Neighbours of cell {i, j} : {get_neighbours(board, i, j, BOARD_SIZE)}")
-
-    print(board)
-    print(f"total blue score : {get_score(board, 'b', BOARD_SIZE)}")
-    print(f"total red score : {get_score(board, 'r', BOARD_SIZE)}")
-    
-    return []
-
-    # return [
-    #     (5, 6, -1, 1),
-    #     (3, 1, 0, 1),
-    #     (3, 2, -1, 1),
-    #     (1, 4, 0, -1),
-    #     (1, 3, 0, -1)
-    # ]
+def boardify(input):
+    """
+    converts a dictionary of board cell states to a 2D list of lists
+    where each list represents a board cell.
+    returns:
+        list of lists
+    """
+    board = [[None for _ in range(BOARD_SIZE)] for _ in range(BOARD_SIZE)]
+    for ((r, c), (player, power)) in input.items():
+        board[r][c] = (player, power)
+    return board
 
 def get_neighbours(board, r, c, board_size):
     """ 
@@ -58,14 +89,12 @@ def get_neighbours(board, r, c, board_size):
     returns:
         list of neighbour coordinates
     """
-    OFFSETS = [(0,1), (-1,1), (-1,0), (0,-1), (1,-1), (1,0)]
     neighbours = []
-    for i, j in OFFSETS:
-        new_r, new_c = r+i, c+j
+    for dr, dc in OFFSETS:
+        new_r, new_c = r+dr, c+dc
         if 0<=new_r<board_size and 0<=new_c<board_size and board[new_r][new_c]:
             neighbours.append((new_r, new_c))
     return neighbours
-        
         
 def get_score(board, player, board_size):
     """ 
@@ -74,9 +103,9 @@ def get_score(board, player, board_size):
         total score as int
     """
     total_score = 0
-    for i in range(board_size):
-        for j in range(board_size):
-            if board[i][j]:
-                if board[i][j][0] == player:
-                    total_score += board[i][j][1]
+    for r in range(board_size):
+        for c in range(board_size):
+            if board[r][c]:
+                if board[r][c][0] == player:
+                    total_score += board[r][c][1]
     return total_score
