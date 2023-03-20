@@ -1,0 +1,24 @@
+import heapq
+# each node would store (state, pathcost, heuristic_cost, steps_taken)
+# result = []
+# initial state into q, with cost
+    # total cost = current number of steps taken from initial state + heuristic cost
+# --- looping
+# heapify queue
+# heappop, check if goal state reached
+# if reached, return result[]
+# else
+# add the popped move into result
+# put children into queue with cost
+# repeat
+
+class Node:
+    def __init__(self, state, path_cost, heuristic_cost, moves):
+        self.state = state
+        self.path_cost = path_cost
+        self.heuristic_cost = heuristic_cost
+        self.moves = moves
+        
+test = Node([[0,1],[1,0]], 2, 1, [(1,2)])
+
+print(test.state, test.path_cost, test.heuristic_cost, test.moves)

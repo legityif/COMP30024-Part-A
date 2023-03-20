@@ -1,0 +1,12 @@
+# each node would store (state, pathcost, heuristic_cost, steps_taken)
+# result = []
+# initial state into q, with cost
+    # total cost = current number of steps taken from initial state + heuristic cost
+# --- looping
+# heapify queue
+# heappop, check if goal state reached
+# if reached, return result[]
+# else
+# add the popped move into result
+# put children into queue with cost
+# repeat
