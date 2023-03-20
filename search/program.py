@@ -28,18 +28,6 @@ board = [[None for _ in range(BOARD_SIZE)] for _ in range(BOARD_SIZE)]
 def heuristic(i, j):
     pass
 
-def get_score(board, player, board_size):
-    """
-    returns the score of the given player on the given board
-    """
-    score = 0
-    for i in range(board_size):
-        for j in range(board_size):
-            if board[i][j] is not None:
-                if board[i][j][0] == player:
-                    score += board[i][j][1]
-    return score
-
 def search(input: dict[tuple, tuple]) -> list[tuple]:
     print(input)
     print(render_board(input, ansi=True))
@@ -49,12 +37,6 @@ def search(input: dict[tuple, tuple]) -> list[tuple]:
     for i in range(BOARD_SIZE):
         for j in range(BOARD_SIZE):
             print(f"Neighbours of cell {i, j} : {get_neighbours(board, i, j, BOARD_SIZE)}")
-            
-    # SOLVE SEARCHING
-    # use normal array for bfs
-    # use heapq for priority q operations on array
-    # use heapq methods heapq.heappop, heapq.heappush, 
-            
 
     print(board)
     print(f"total blue score : {get_score(board, 'b', BOARD_SIZE)}")
