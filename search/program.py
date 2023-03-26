@@ -27,7 +27,7 @@ from .node import *
 BOARD_SIZE = 7
 OFFSETS = ((0,1), (-1,1), (-1,0), (0,-1), (1,-1), (1,0))
 
-def search(input):
+def search(input: dict[tuple, tuple]) -> list[tuple]:
     """
     Performs a A* search with a heuristic function on the given board.
     """
