@@ -35,7 +35,7 @@ def search(input):
     initial_node = Node(initial_board, 0, heuristic(initial_board), [])
     queue = [initial_node]
 
-    visited = set(tupleify(initial_board))
+    # visited = set(tupleify(initial_board))
     while queue:
         heapq.heapify(queue)
         curr = heapq.heappop(queue)
@@ -54,9 +54,10 @@ def search(input):
                         spread_in_dir(curr_child_board, dr, dc, r, c, old_r, old_c, power)
                         curr_move_copy = curr.moves+[[r, c, dr, dc]]
                         child_node = Node(curr_child_board, curr.path_cost+1, heuristic(curr_child_board), curr_move_copy)
-                        if tupleify(child_node.board) not in visited:
-                            queue.append(child_node)
-                            visited.add(tupleify(child_node.board))
+                        # check if current state is in visited state, but with a lower cost, replace visited state with identical state with lower cost
+                        # if tupleify(child_node.board) not in visited:
+                        queue.append(child_node)
+                        # visited.add(tupleify(child_node.board))
 
 def spread_in_dir(curr_child_board, dr, dc, r, c, old_r, old_c, power):
     """
