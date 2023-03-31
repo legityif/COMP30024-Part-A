@@ -22,7 +22,7 @@
 # print(render_board(input, ansi=True))
 
 import heapq
-from .Node import *
+from .node import *
 import math
 from collections import deque
 import time
@@ -32,37 +32,85 @@ OFFSETS = ((0,1), (-1,1), (-1,0), (0,-1), (1,-1), (1,0))
 
 def search(input: dict[tuple, tuple]) -> list[tuple]:
     """
-    Performs a A* search with a heuristic function on the given board.
+    Performs an Iterative Deepening A* search with a heuristic function on the given board.
     """
     s_time = time.time()
+    
     initial_board = boardify(input)
-    initial_node = Node(initial_board, 0, heuristic(initial_board), [])
-    queue = [initial_node]
-
-    # visited = set(tupleify(initial_board))
-    while queue:
-        heapq.heapify(queue)
-        curr = heapq.heappop(queue)
-        # print(curr)                
-        if get_score(curr.board, 'b', BOARD_SIZE)==0:
+    initial_node = Node(initial_board, 0, heuristic_infinite_spread(initial_board), [])
+    print(initial_node)
+    bound = initial_node.heuristic_cost
+    while True:
+        t = idastar(initial_node, 0, bound)
+        if isinstance(t, list):
             e_time = time.time()
             print(e_time - s_time)
-            return curr.moves
+            return t
+        if t == float('inf'):
+            raise ValueError("No solution found")
+        bound = t
+
+def idastar(node, path_cost, bound):
+    total_cost = path_cost + node.heuristic_cost
+    if total_cost > bound:
+        return total_cost
+    if get_score(node.board, 'b', BOARD_SIZE)==0 or get_score(node.board, 'r', BOARD_SIZE)==0:
+        return node.moves
+
+    min_cost = float('inf')
+    for r in range(BOARD_SIZE):
+        for c in range(BOARD_SIZE):
+            if node.board[r][c] and node.board[r][c][0]=="r":
+                for dr, dc in OFFSETS:
+                    child_board = [row[:] for row in node.board]
+                    power = node.board[r][c][1]
+                    old_r, old_c = r, c
+                    spread_in_dir(child_board, dr, dc, r, c, old_r, old_c, power)
+                    if get_score(child_board, 'r', BOARD_SIZE)==0:
+                            continue
+                    child_node = Node(child_board, node.path_cost+1, heuristic(child_board), node.moves+[[r, c, dr, dc]])
+                    cost = idastar(child_node, path_cost+1, bound)
+                    if isinstance(cost, list):
+                        return cost
+                    min_cost = min(min_cost, cost)
+    return min_cost
+
+
+# def search(input: dict[tuple, tuple]) -> list[tuple]:
+#     """
+#     Performs a A* search with a heuristic function on the given board.
+#     """
+#     s_time = time.time()
+#     initial_board = boardify(input)
+#     initial_node = Node(initial_board, 0, heuristic_infinite_spread(initial_board), [])
+#     queue = [initial_node]
+
+#     # visited = set(tupleify(initial_board))
+#     while queue:
+#         heapq.heapify(queue)
+#         curr = heapq.heappop(queue)
+#         # print(curr)
+#         if get_score(curr.board, 'b', BOARD_SIZE)==0:
+#             e_time = time.time()
+#             print(e_time - s_time)
+#             return curr.moves
         
-        for r in range(BOARD_SIZE):
-            for c in range(BOARD_SIZE):
-                if curr.board[r][c] and curr.board[r][c][0]=="r":
-                    for dr, dc in OFFSETS:
-                        curr_child_board = [row[:] for row in curr.board]
-                        power = curr.board[r][c][1]
-                        old_r, old_c = r, c
-                        spread_in_dir(curr_child_board, dr, dc, r, c, old_r, old_c, power)
-                        curr_move_copy = curr.moves+[[r, c, dr, dc]]
-                        child_node = Node(curr_child_board, curr.path_cost+1, heuristic_infinite_spread(curr_child_board), curr_move_copy)
-                        # check if current state is in visited state, but with a lower cost, replace visited state with identical state with lower cost
-                        # if tupleify(child_node.board) not in visited:
-                        queue.append(child_node)
-                        # visited.add(tupleify(child_node.board))
+#         for r in range(BOARD_SIZE):
+#             for c in range(BOARD_SIZE):
+#                 if curr.board[r][c] and curr.board[r][c][0]=="r":
+#                     for dr, dc in OFFSETS:
+#                         curr_child_board = [row[:] for row in curr.board]
+#                         power = curr.board[r][c][1]
+#                         old_r, old_c = r, c
+#                         spread_in_dir(curr_child_board, dr, dc, r, c, old_r, old_c, power)
+#                         curr_move_copy = curr.moves+[[r, c, dr, dc]]
+#                         if get_score(curr_child_board, 'r', BOARD_SIZE)==0:
+#                             continue
+#                         child_node = Node(curr_child_board, curr.path_cost+1, heuristic_infinite_spread(curr_child_board), curr_move_copy)
+#                         # check if current state is in visited state, but with a lower cost, replace visited state with identical state with lower cost
+#                         # if tupleify(child_node.board) not in visited:
+#                         queue.append(child_node)
+#                         # visited.add(tupleify(child_node.board))
 
 def spread_in_dir(curr_child_board, dr, dc, r, c, old_r, old_c, power):
     """
@@ -101,8 +149,7 @@ def heuristic(board):
                     total_blue += 1
                 else:
                     max_red = max(max_red, board[r][c][1])
-    #print(math.ceil(total_blue/max(max_red, max_blue)))
-    return math.ceil(total_blue/max(max_red, max_blue))
+    return math.floor(total_blue/max(max_red, max_blue))
 
 def heuristic_infinite_spread(board):
     """
